@@ -3,11 +3,16 @@ using Toybox.Math;
 using Toybox.System as Sys;
 //using Toybox.Test;
 
-const averageOver = 100; // Distance (m) over which to average Rate
-const accuracy = 2; // within how many metres ? or should it be a % ?
+const distAverageOver = 50; // Distance (m) over which to average Rate
+const distAccuracy = 2; // within how many metres ? or should it be a % ?
+
+const timeAverageOver = 20; // Time (s) over which to average Rate
+const timeAccuracy = 0; // within how many seconds ? or should it be a % ?
+
 const bufLen = 600; // max number of points
 
 var usePace = true;
+var useDist = true;
 
 class RollingAverageView extends Ui.SimpleDataField {
 
@@ -109,7 +114,6 @@ function random(m, n) {
 
        		Time = mTimes[mCurrent] - mTimes[mOldest];
         	Dist = mDists[mCurrent] - mDists[mOldest];
-
 //  Set up mVal ready for display
         	if (usePace) {
 	       		Rate = (Dist != 0) ? Time / Dist : 0.0;
@@ -124,13 +128,23 @@ function random(m, n) {
 // The rest of the code is to set up the indexes ready for data in the next call
 // If the distance is greater than we're interested in, keep discarding oldest values until it's OK
 // but don't let the 'oldest' index "catch up and overtake" the 'current' one
-        	while ((Dist - averageOver) > accuracy && mOldest != mCurrent) {
+if(useDist) {
+        	while ((Dist - distAverageOver) > distAccuracy && mOldest != mCurrent) {
         		mOldest++;
         		if (mOldest >= bufLen) {
         			mOldest = 0;
         		}
 	        	Dist = mDists[mCurrent] - mDists[mOldest];
         	}
+} else {
+        	while ((Time - timeAverageOver) > timeAccuracy && mOldest != mCurrent) {
+        		mOldest++;
+        		if (mOldest >= bufLen) {
+        			mOldest = 0;
+        		}
+	        	Time = mTimes[mCurrent] - mTimes[mOldest];
+        	}
+}        	
 // Move the 'current' index on and wrap around if necessary        	
        		mCurrent++;       		
        		if (mCurrent >= bufLen) {
