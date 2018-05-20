@@ -1,0 +1,28 @@
+<resources>
+	<properties>
+		<property id="distAverageOver" type="number">25</property>
+		<property id="timeAverageOver" type="number">25</property>
+		<property id="useDist" type="boolean">true</property>
+		<property id="showPace" type="boolean">true</property>
+	</properties>
+	<settings>
+		<setting propertyKey="@Properties.distAverageOver" title="@Strings.distTitle">
+			<settingConfig type="numeric"></settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.timeAverageOver" title="@Strings.timeTitle">
+			<settingConfig type="numeric"></settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.useDist" title="@Strings.distLabel">
+			<settingConfig type="boolean"></settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.showPace" title="@Strings.paceTitle">
+			<settingConfig type="boolean"></settingConfig>
+		</setting>
+	</settings>
+	<strings>
+		<string id="distTitle">Distance to average over (m)</string>
+		<string id="timeTitle">Time to average over (s)</string>
+		<string id="distLabel">Average over distance? (otherwise time)</string>
+		<string id="paceTitle">Display as pace? (otherwise speed)</string>
+	</strings>
+</resources>

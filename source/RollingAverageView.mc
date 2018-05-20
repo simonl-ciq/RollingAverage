@@ -1,18 +1,20 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Math;
 using Toybox.System as Sys;
+using Toybox.Application as App;
+using Toybox.Application.Properties as Props;
 //using Toybox.Test;
 
-const distAverageOver = 50; // Distance (m) over which to average Rate
+const cDistAverageOver = 25; // Distance (m) over which to average Rate
 const distAccuracy = 2; // within how many metres ? or should it be a % ?
 
-const timeAverageOver = 20; // Time (s) over which to average Rate
+const cTimeAverageOver = 25; // Time (ms) over which to average Rate
 const timeAccuracy = 0; // within how many seconds ? or should it be a % ?
 
 const bufLen = 600; // max number of points
 
-var usePace = true;
-var useDist = true;
+const cShowPace = true;
+const cUseDist = true;
 
 class RollingAverageView extends Ui.SimpleDataField {
 
@@ -23,6 +25,11 @@ class RollingAverageView extends Ui.SimpleDataField {
         PAUSED,
         RUNNING
     }
+
+	hidden var mDistAverageOver = 25; // Distance (m) over which to average Rate
+	hidden var mTimeAverageOver = 25; // Time (s) over which to average Rate
+	hidden var mShowPace = true;
+	hidden var mUseDist = true;
 
     hidden var mTimerState = OFF;
 
@@ -41,11 +48,45 @@ function random(m, n) {
 */
     // Set the label of the data field here.
     function initialize() {
+        var tDistAverageOver;		
+		var tTimeAverageOver;
+		
         SimpleDataField.initialize();
+        
         mTimes[0] = 0;
         mDists[0] = 0;
-        mVal = usePace ? "0:00" : "0.00";
         label = "Mov. Avg.";
+        if ( App has :Properties ) {
+        	tDistAverageOver = Props.getValue("distAverageOver");
+	        tTimeAverageOver = Props.getValue("timeAverageOver");
+	        mShowPace = Props.getValue("showPace");
+	        mUseDist = Props.getValue("useDist");
+	    } else {
+			var thisApp = App.getApp();
+	    	tDistAverageOver = thisApp.getProperty("distAverageOver");
+	    	tTimeAverageOver = thisApp.getProperty("timeAverageOver");
+	        mShowPace = thisApp.getProperty("showPace");
+	        mUseDist = thisApp.getProperty("useDist");
+	    }
+        
+        if (tDistAverageOver == null) {
+        	tDistAverageOver = cDistAverageOver;
+        }
+       	mDistAverageOver = tDistAverageOver.toNumber();
+       	
+        if (tTimeAverageOver == null) {
+        	tTimeAverageOver = cTimeAverageOver;
+        }
+       	mTimeAverageOver = tTimeAverageOver.toNumber() * 1000;
+
+        if (mUseDist == null) {
+        	mUseDist = cUseDist;
+        }
+
+        if (mShowPace == null) {
+        	mShowPace = cShowPace;
+        }
+        mVal = mShowPace ? "0:00" : "0.00";
     }
 
 
@@ -82,7 +123,7 @@ function random(m, n) {
     function onTimerReset()
     {
         mTimerState = STOPPED;
-        mVal = usePace ? "0:00" : "0.00";
+        mVal = mShowPace ? "0:00" : "0.00";
         mDists[0] = 0;
         mTimes[0] = 0;
         mOldest = 0;
@@ -115,7 +156,7 @@ function random(m, n) {
        		Time = mTimes[mCurrent] - mTimes[mOldest];
         	Dist = mDists[mCurrent] - mDists[mOldest];
 //  Set up mVal ready for display
-        	if (usePace) {
+        	if (mShowPace) {
 	       		Rate = (Dist != 0) ? Time / Dist : 0.0;
 		        var Mins = (Rate / 60).toNumber();
 		        var Secs = Rate - (Mins * 60);
@@ -128,23 +169,23 @@ function random(m, n) {
 // The rest of the code is to set up the indexes ready for data in the next call
 // If the distance is greater than we're interested in, keep discarding oldest values until it's OK
 // but don't let the 'oldest' index "catch up and overtake" the 'current' one
-if(useDist) {
-        	while ((Dist - distAverageOver) > distAccuracy && mOldest != mCurrent) {
-        		mOldest++;
-        		if (mOldest >= bufLen) {
-        			mOldest = 0;
-        		}
-	        	Dist = mDists[mCurrent] - mDists[mOldest];
-        	}
-} else {
-        	while ((Time - timeAverageOver) > timeAccuracy && mOldest != mCurrent) {
-        		mOldest++;
-        		if (mOldest >= bufLen) {
-        			mOldest = 0;
-        		}
-	        	Time = mTimes[mCurrent] - mTimes[mOldest];
-        	}
-}        	
+			if (mUseDist) {
+	        	while ((Dist - cDistAverageOver) > distAccuracy && mOldest != mCurrent) {
+    	    		mOldest++;
+        			if (mOldest >= bufLen) {
+        				mOldest = 0;
+        			}
+		        	Dist = mDists[mCurrent] - mDists[mOldest];
+    	    	}
+			} else {
+        		while ((Time - mTimeAverageOver) > timeAccuracy && mOldest != mCurrent) {
+        			mOldest++;
+        			if (mOldest >= bufLen) {
+        				mOldest = 0;
+        			}
+		        	Time = mTimes[mCurrent] - mTimes[mOldest];
+    	    	}
+			}        	
 // Move the 'current' index on and wrap around if necessary        	
        		mCurrent++;       		
        		if (mCurrent >= bufLen) {
