@@ -1,7 +1,8 @@
 <resources>
 	<properties>
-		<property id="distTime" type="number">0</property>
-		<property id="averageOver" type="number">25</property>
+
+		<property id="distTime" type="number"><!-- Value 0 means average over distance, anything else means average over time-->0</property>
+		<property id="averageOver" type="number"><!--Value is the metres to be averaged over in distance mode or seconds in time mode-->200</property>
 		<property id="showPace" type="boolean">true</property>
 	</properties>
 	<settings>

@@ -5,11 +5,11 @@ using Toybox.Application as App;
 using Toybox.Application.Properties as Props;
 //using Toybox.Test;
 
-const cDistAverageOver = 100; // Distance (m) over which to average Rate
+const cDistAverageOver = 200; // Distance (m) over which to average Rate
 const distAccuracy = 2; // within how many metres ? or should it be a % ?
 
-const cTimeAverageOver = 30; // Time (s) over which to average Rate
-const timeAccuracy = 0; // within how many seconds ? or should it be a % ?
+const cTimeAverageOver = 200; // Time (s) over which to average Rate
+const timeAccuracy = 500; // within how many milli seconds ? or should it be a % ?
 
 const bufLen = 600; // max number of points
 
@@ -26,8 +26,10 @@ class RollingAverageView extends Ui.SimpleDataField {
         RUNNING
     }
 
+	hidden var mNotMetric = false;  // ie they are Sys.UNIT_METRIC by default
+
 	hidden var mUseDist = true;
-	hidden var mAverageOver = 100; // Distance (m) or Time (s) over which to average Rate
+	hidden var mAverageOver = 200; // Distance (m) or Time (s) over which to average Rate
 	hidden var mShowAsPace = true;
 
     hidden var mTimerState = OFF;
@@ -56,7 +58,9 @@ function random(m, n) {
         mDists[0] = 0;
         label = "Mov. Avg.";
 
-        if ( App has :Properties ) {
+		mNotMetric = Sys.getDeviceSettings().paceUnits != Sys.UNIT_METRIC;
+
+		if ( App has :Properties ) {
 	        tDistTime = Props.getValue("distTime");
         	tAverageOver = Props.getValue("averageOver");
 	        mShowAsPace = Props.getValue("showPace");
@@ -131,11 +135,11 @@ function random(m, n) {
         // See Activity.Info in the documentation for available information.
 		var Dist;
 		var Time;
-		var Rate; // User can choose pace or speed.
+		var Rate; // User can choose pace or speed
 
 		// NB	info.elapsedTime is time since activity started
 		//		info.timerTime is time timer has been running excluding pauses/stops
-		//		shame there's no "timedDisance" :(
+		//		shame there's no "timedDistance" :(
 
         if (mTimerState == RUNNING) {
         	if (info.timerTime == null || info.elapsedDistance == null) {
@@ -147,14 +151,21 @@ function random(m, n) {
 
        		Time = mTimes[mCurrent] - mTimes[mOldest];
         	Dist = mDists[mCurrent] - mDists[mOldest];
+
 //  Set up mVal ready for display
+// Remember distance is metres, time is milliseconds
+      		if (mNotMetric) {
+       			Dist /= 1.609344; // km in a mile, near enough
+       		}
+       		
         	if (mShowAsPace) {
 	       		Rate = (Dist != 0) ? Time / Dist : 0.0;
-		        var Mins = (Rate / 60).toNumber();
+		        var Mins = (Rate / 60.0).toNumber();
 		        var Secs = Rate - (Mins * 60);
 	    	    mVal = Lang.format("$1$:$2$", [Mins.format("%d"), Secs.format("%02d")]);
-	       	} else {
-	       		Rate = (Time != 0) ? Dist / Time * 1000 : 0.0;
+	       	} else { // Show as Speed
+	       		// & change from milli units (metres or "milli miles") per sec to full units (kilometres or miles) per hour
+	       		Rate = (Time != 0) ? Dist / Time * 1000 * 3.6 : 0.0;
 	    	    mVal = Rate.format("%4.2f");	       		
 	       	}
 
