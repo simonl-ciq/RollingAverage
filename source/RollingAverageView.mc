@@ -29,7 +29,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 	hidden var mNotMetric = false;  // ie they are Sys.UNIT_METRIC by default
 
 	hidden var mUseDist = true;
-	hidden var mAverageOver = 200; // Distance (m) or Time (s) over which to average Rate
+	hidden var mAverageOver = 100; // Distance (m) or Time (s) over which to average Rate
 	hidden var mShowAsPace = true;
 
     hidden var mTimerState = OFF;
@@ -157,15 +157,15 @@ function random(m, n) {
       		if (mNotMetric) {
        			Dist /= 1.609344; // km in a mile, near enough
        		}
-       		
-        	if (mShowAsPace) {
+
+            if (mShowAsPace) {
 	       		Rate = (Dist != 0) ? Time / Dist : 0.0;
 		        var Mins = (Rate / 60.0).toNumber();
 		        var Secs = Rate - (Mins * 60);
 	    	    mVal = Lang.format("$1$:$2$", [Mins.format("%d"), Secs.format("%02d")]);
 	       	} else { // Show as Speed
 	       		// & change from milli units (metres or "milli miles") per sec to full units (kilometres or miles) per hour
-	       		Rate = (Time != 0) ? Dist / Time * 1000 * 3.6 : 0.0;
+	       		Rate = (Time != 0) ? ((Dist * 1000 * 3.6) / Time) : 0.0;
 	    	    mVal = Rate.format("%4.2f");	       		
 	       	}
 
