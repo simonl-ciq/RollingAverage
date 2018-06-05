@@ -56,19 +56,19 @@ function random(m, n) {
         
         mTimes[0] = 0;
         mDists[0] = 0;
-        label = "Mov. Avg.";
+        label = "Roll. Avg.";
 
 		mNotMetric = Sys.getDeviceSettings().paceUnits != Sys.UNIT_METRIC;
 
 		if ( App has :Properties ) {
 	        tDistTime = Props.getValue("distTime");
         	tAverageOver = Props.getValue("averageOver");
-	        mShowAsPace = Props.getValue("showPace");
+	        mShowAsPace = Props.getValue("showPace") == 1;
 	    } else {
 			var thisApp = App.getApp();
 	        tDistTime = thisApp.getProperty("distTime");
 	    	tAverageOver = thisApp.getProperty("averageOver");
-	        mShowAsPace = thisApp.getProperty("showPace");
+	        mShowAsPace = thisApp.getProperty("showPace") == 1;
 	    }
 
        	mUseDist = (tDistTime == null) ? cUseDist : (tDistTime == 0);
