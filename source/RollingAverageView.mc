@@ -41,12 +41,7 @@ class RollingAverageView extends Ui.SimpleDataField {
     hidden var mCurrent = 0;
 
     hidden var mVal	  = "";
-/*
-const RAND_MAX = 0x7FFFFFFF;
-function random(m, n) {
-    return m + Math.rand() / (RAND_MAX / (n - m + 1) + 1);
-}
-*/
+
     // Set the label of the data field here.
     function initialize() {
         var tAverageOver;
@@ -56,7 +51,6 @@ function random(m, n) {
         
         mTimes[0] = 0;
         mDists[0] = 0;
-        label = "Roll. Avg.";
 
 		mNotMetric = Sys.getDeviceSettings().paceUnits != Sys.UNIT_METRIC;
 
@@ -74,15 +68,18 @@ function random(m, n) {
        	mUseDist = (tDistTime == null) ? cUseDist : (tDistTime == 0);
 
 		if (mUseDist) {
-	       	mAverageOver = (tAverageOver == null) ? cDistAverageOver : tAverageOver.toNumber();
+			mAverageOver = (tAverageOver == null) ? cDistAverageOver : tAverageOver.toNumber();
 		} else {
-	       	mAverageOver = (tAverageOver == null) ? cTimeAverageOver : tAverageOver.toNumber() * 1000;
+			mAverageOver = (tAverageOver == null) ? cTimeAverageOver : tAverageOver.toNumber() * 1000;
 		}
 
-        if (mShowAsPace == null) {
-        	mShowAsPace = cShowPace;
-        }
-        mVal = mShowAsPace ? "0:00" : "0.00";
+		if (mShowAsPace == null) {
+			mShowAsPace = cShowPace;
+		}
+
+		label = tAverageOver.toString() + (mUseDist ? "m " : "s ") + (mShowAsPace ? "Pace" : "Speed");
+
+		mVal = mShowAsPace ? "0:00" : "0.00";
     }
 
 
