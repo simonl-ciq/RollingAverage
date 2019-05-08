@@ -5,3 +5,5 @@ It shows minutes and seconds per unit distance (kilometre or mile) or speed (kil
 
 The widget is available from the Garmin Connect IQ store:
 https://apps.garmin.com/en-US/apps/28fdec7f-3807-4d24-b85a-4c86b40501f4
+
+The icon was made by Vignesh Oviyan from flaticon. (https://www.flaticon.com/authors/vignesh-oviyan) licensed by CC BY 3.0 (https://creativecommons.org/licenses/by/3.0).
