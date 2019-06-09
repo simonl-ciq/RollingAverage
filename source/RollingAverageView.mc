@@ -5,16 +5,21 @@ using Toybox.Application as App;
 using Toybox.Application.Properties as Props;
 //using Toybox.Test;
 
-const cDistAverageOver = 200; // Distance (m) over which to average Rate
+const cDistAverageOver = 200.0; // Distance (m) over which to average Rate
 const distAccuracy = 2; // within how many metres ? or should it be a % ?
 
-const cTimeAverageOver = 200; // Time (s) over which to average Rate
-const timeAccuracy = 500; // within how many milli seconds ? or should it be a % ?
+const cTimeAverageOver = 60; // Time (s) over which to average Rate
+const timeAccuracy = 1000; // within how many milli seconds ? or should it be a % ?
 
 const bufLen = 600; // max number of points
 
 const cShowPace = true;
 const cUseDist = true;
+
+const KM_PER_MILE = 1.609344; // km in a mile
+const METRES_PER_MILE = 1609.344; // metres in a mile
+//const MILES_PER_METER = 0.000621371; // Reciprocal of above
+const METRES_PER_YARD = 0.9144;
 
 class RollingAverageView extends Ui.SimpleDataField {
 
@@ -26,7 +31,8 @@ class RollingAverageView extends Ui.SimpleDataField {
         RUNNING
     }
 
-	hidden var mNotMetric = false;  // ie they are Sys.UNIT_METRIC by default
+	hidden var mNotMetricPace = false;  // ie they are Sys.UNIT_METRIC by default
+	hidden var mNotMetricDist = false;  // ie they are Sys.UNIT_METRIC by default
 
 	hidden var mUseDist = true;
 	hidden var mAverageOver = 100; // Distance (m) or Time (s) over which to average Rate
@@ -40,19 +46,28 @@ class RollingAverageView extends Ui.SimpleDataField {
     hidden var mOldest  = 0;
     hidden var mCurrent = 0;
 
+    hidden var mSlow = false; // true do compute every "Mod" calls, false do it every time
+    hidden var mMod = 1; // a toggle
+    hidden var mDoCompute = 0; // a toggle
+
+    hidden var mNotAvailable = false;
     hidden var mVal	  = "";
 
     // Set the label of the data field here.
     function initialize() {
         var tAverageOver;
+        var tfAverageOver;
 		var tDistTime;
+		var tUnits;
+		var tiAverageOver;
 		
         SimpleDataField.initialize();
         
         mTimes[0] = 0;
         mDists[0] = 0;
 
-		mNotMetric = Sys.getDeviceSettings().paceUnits != Sys.UNIT_METRIC;
+		mNotMetricPace = Sys.getDeviceSettings().paceUnits != Sys.UNIT_METRIC;
+		mNotMetricDist = Sys.getDeviceSettings().distanceUnits != Sys.UNIT_METRIC;
 
 		if ( App has :Properties ) {
 	        tDistTime = Props.getValue("distTime");
@@ -68,17 +83,73 @@ class RollingAverageView extends Ui.SimpleDataField {
        	mUseDist = (tDistTime == null) ? cUseDist : (tDistTime == 0);
 
 		if (mUseDist) {
-			mAverageOver = (tAverageOver == null) ? cDistAverageOver : tAverageOver.toNumber();
+			if (tAverageOver == null) {
+				tAverageOver = cDistAverageOver;
+			}
+			tfAverageOver = tAverageOver.toFloat();
+		    tiAverageOver = tAverageOver.toNumber();
+			if (mNotMetricDist) {
+// work out display title & convert yards/miles to metres
+				if (tiAverageOver > 3) {
+// Big number means small units i.e. yards not miles
+		    	    tUnits = tiAverageOver.toString() + " yard";
+					tfAverageOver *= METRES_PER_YARD;
+//					mSlow = false;
+				} else {
+// Small number means big units i.e. miles not yards
+					if (tfAverageOver == tiAverageOver) {
+// An integer number of miles
+		    	    	tUnits = tiAverageOver.toString() + " mile";
+		    	    } else {
+		    	    	tUnits = tfAverageOver.format("%4.2f") + " mile";
+		    	    }
+					tfAverageOver *= METRES_PER_MILE;
+//					mSlow = true;
+				}
+				tiAverageOver = tfAverageOver.toNumber();
+			} else {
+// work out display title & maybe convert km to metres
+				if (tiAverageOver > 5) {
+// Big number means small units i.e. metres not km
+		    	    tUnits = tiAverageOver.toString() + " metre";
+//					mSlow = false;
+				} else {
+// Small number means big units i.e. km not metres
+					if (tfAverageOver == tiAverageOver) {
+// An integer number of km					
+		    	    	tUnits = tiAverageOver.toString() + " km";
+		    	    } else {
+		    	    	tUnits = tfAverageOver.format("%4.2f") + " km";
+		    	    }
+					tfAverageOver *= 1000.0;
+//					mSlow = true;
+				}
+				tiAverageOver = tfAverageOver.toNumber();
+			}
+			mAverageOver = tiAverageOver;
 		} else {
-			mAverageOver = (tAverageOver == null) ? cTimeAverageOver : tAverageOver.toNumber() * 1000;
+		    tiAverageOver = (tAverageOver == null) ? cTimeAverageOver : tAverageOver.toNumber();
+			tUnits = tiAverageOver.toString() + " secs";
+//			mSlow = false;
+			mAverageOver = tiAverageOver * 1000;
 		}
+			if (mAverageOver > bufLen) {
+				mSlow = true;
+				mMod = Math.round(((mAverageOver.toFloat() / bufLen)+0.5).toNumber()) + 1;
+			} else {
+				mSlow = false;
+			}
 
 		if (mShowAsPace == null) {
 			mShowAsPace = cShowPace;
 		}
 
-		label = tAverageOver.toString() + (mUseDist ? "m " : "s ") + (mShowAsPace ? "Pace" : "Speed");
+		label = tUnits + (mShowAsPace ? " Pace" : " Speed");
 
+		var info = Activity.getActivityInfo();
+       	if (!(info has :timerTime) || !(info has :elapsedDistance)) {
+       		mNotAvailable = true;
+       	}
 		mVal = mShowAsPace ? "0:00" : "0.00";
     }
 
@@ -130,31 +201,61 @@ class RollingAverageView extends Ui.SimpleDataField {
     // guarantee that compute() will be called before onUpdate().
     function compute(info) {
         // See Activity.Info in the documentation for available information.
+		var rawDist;
 		var Dist;
 		var Time;
 		var Rate; // User can choose pace or speed
 
+       	if (mNotAvailable) {
+       		return "Not Available";
+       	}
+
 		// NB	info.elapsedTime is time since activity started
 		//		info.timerTime is time timer has been running excluding pauses/stops
 		//		shame there's no "timedDistance" :(
-
         if (mTimerState == RUNNING) {
         	if (info.timerTime == null || info.elapsedDistance == null) {
         		return mVal;
         	}
+
+        	if (mSlow) {
+        		mDoCompute = (mDoCompute+1) % mMod;
+        		if (mDoCompute != 1) {
+        			return mVal;
+        		}
+        	}
         	
         	mTimes[mCurrent] = info.timerTime;
         	mDists[mCurrent] = info.elapsedDistance;
+        	rawDist = mDists[mCurrent] - mDists[mOldest];
 
+// Look for the distance nearest to the value we're averaging over
+			if (mUseDist && mCurrent > 0) {
+				var ind = mOldest;
+				var rawDist1 = rawDist;
+				var diff1 = (rawDist - mAverageOver).abs();
+				var diff0 = diff1;
+				while (diff1 <= diff0) {
+					diff0 = diff1;
+					mOldest = ind;
+					rawDist = rawDist1;
+					ind++;
+        			if (ind >= bufLen) {
+        				ind = 0;
+        			}
+        			if (ind == mCurrent) {
+        				break;
+        			}
+					rawDist1 = mDists[mCurrent] - mDists[ind];
+					diff1 = (rawDist1 - mAverageOver).abs();
+				}
+			}
        		Time = mTimes[mCurrent] - mTimes[mOldest];
-        	Dist = mDists[mCurrent] - mDists[mOldest];
+//Sys.println(mCurrent + ", " + mOldest + ", "  + rawDist + ", " + Time);
 
 //  Set up mVal ready for display
 // Remember distance is metres, time is milliseconds
-      		if (mNotMetric) {
-       			Dist /= 1.609344; // km in a mile, near enough
-       		}
-
+			Dist = (mNotMetricPace) ? rawDist / KM_PER_MILE : rawDist;
             if (mShowAsPace) {
 	       		Rate = (Dist != 0) ? Time / Dist : 0.0;
 		        var Mins = (Rate / 60.0).toNumber();
@@ -170,15 +271,15 @@ class RollingAverageView extends Ui.SimpleDataField {
 // If the distance is greater than we're interested in, keep discarding oldest values until it's OK
 // but don't let the 'oldest' index "catch up and overtake" the 'current' one
 			if (mUseDist) {
-	        	while ((Dist - mAverageOver) > distAccuracy && mOldest != mCurrent) {
+	        	while (rawDist > mAverageOver && mOldest != mCurrent) {
     	    		mOldest++;
         			if (mOldest >= bufLen) {
         				mOldest = 0;
         			}
-		        	Dist = mDists[mCurrent] - mDists[mOldest];
+		        	rawDist = mDists[mCurrent] - mDists[mOldest];
     	    	}
 			} else {
-        		while ((Time - mAverageOver) > timeAccuracy && mOldest != mCurrent) {
+        		while (Time > mAverageOver && mOldest != mCurrent) {
         			mOldest++;
         			if (mOldest >= bufLen) {
         				mOldest = 0;
@@ -186,7 +287,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 		        	Time = mTimes[mCurrent] - mTimes[mOldest];
     	    	}
 			}        	
-// Move the 'current' index on and wrap around if necessary        	
+// Move the 'current' index on and wrap around if necessary
        		mCurrent++;       		
        		if (mCurrent >= bufLen) {
        			mCurrent = 0;
@@ -202,13 +303,6 @@ class RollingAverageView extends Ui.SimpleDataField {
 	        	}
         	}
         }
-/* KISS - so comment out for now
-        if (mTimerState == STOPPED) {
-       		return mVal;
-        } else if (mTimerState == PAUSED) {
-    	  	return mVal;
-    	}
-*/
 		return mVal;
     }
 
