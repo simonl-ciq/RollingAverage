@@ -23,14 +23,6 @@ const METRES_PER_YARD = 0.9144;
 
 class RollingAverageView extends Ui.SimpleDataField {
 
-    enum
-    {
-        OFF,
-        STOPPED,
-        PAUSED,
-        RUNNING
-    }
-
 	hidden var mNotMetricPace = false;  // ie they are Sys.UNIT_METRIC by default
 	hidden var mNotMetricDist = false;  // ie they are Sys.UNIT_METRIC by default
 
@@ -38,7 +30,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 	hidden var mAverageOver = 100; // Distance (m) or Time (s) over which to average Rate
 	hidden var mShowAsPace = true;
 
-    hidden var mTimerState = OFF;
+    hidden var mTimerState = Activity.TIMER_STATE_OFF;
 
 	hidden var mTimes = new [bufLen];
 	hidden var mDists = new [bufLen];
@@ -82,6 +74,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 
        	mUseDist = (tDistTime == null) ? cUseDist : (tDistTime == 0);
 
+		mSlow = false;
 		if (mUseDist) {
 			if (tAverageOver == null) {
 				tAverageOver = cDistAverageOver;
@@ -90,55 +83,54 @@ class RollingAverageView extends Ui.SimpleDataField {
 		    tiAverageOver = tAverageOver.toNumber();
 			if (mNotMetricDist) {
 // work out display title & convert yards/miles to metres
-				if (tiAverageOver > 3) {
-// Big number means small units i.e. yards not miles
-		    	    tUnits = tiAverageOver.toString() + " yard";
-					tfAverageOver *= METRES_PER_YARD;
-//					mSlow = false;
-				} else {
+				if (tiAverageOver < 10) {
 // Small number means big units i.e. miles not yards
 					if (tfAverageOver == tiAverageOver) {
 // An integer number of miles
-		    	    	tUnits = tiAverageOver.toString() + " mile";
+		    	    	tUnits = tiAverageOver.toString() + "mile";
 		    	    } else {
-		    	    	tUnits = tfAverageOver.format("%4.2f") + " mile";
+		    	    	tUnits = tfAverageOver.format("%4.2f") + "mi";
 		    	    }
 					tfAverageOver *= METRES_PER_MILE;
-//					mSlow = true;
+
+				} else {
+// Big number means small units i.e. yards not miles
+		    	    tUnits = tiAverageOver.toString() + "yd";
+					tfAverageOver *= METRES_PER_YARD;
 				}
 				tiAverageOver = tfAverageOver.toNumber();
 			} else {
 // work out display title & maybe convert km to metres
-				if (tiAverageOver > 5) {
-// Big number means small units i.e. metres not km
-		    	    tUnits = tiAverageOver.toString() + " metre";
-//					mSlow = false;
-				} else {
+				if (tiAverageOver < 10) {
 // Small number means big units i.e. km not metres
 					if (tfAverageOver == tiAverageOver) {
 // An integer number of km					
-		    	    	tUnits = tiAverageOver.toString() + " km";
+		    	    	tUnits = tiAverageOver.toString() + "km";
 		    	    } else {
-		    	    	tUnits = tfAverageOver.format("%4.2f") + " km";
+		    	    	tUnits = tfAverageOver.format("%4.2f") + "km";
 		    	    }
 					tfAverageOver *= 1000.0;
-//					mSlow = true;
+				} else {
+// Big number means small units i.e. metres not km
+		    	    tUnits = tiAverageOver.toString() + "m";
 				}
 				tiAverageOver = tfAverageOver.toNumber();
+			}
+			if (tiAverageOver > bufLen) {
+				mSlow = true;
+				mMod = Math.round(((tfAverageOver / bufLen)+0.5).toNumber()) + 1;
 			}
 			mAverageOver = tiAverageOver;
 		} else {
 		    tiAverageOver = (tAverageOver == null) ? cTimeAverageOver : tAverageOver.toNumber();
-			tUnits = tiAverageOver.toString() + " secs";
-//			mSlow = false;
+		    if (tiAverageOver == 0) { tiAverageOver = 1; }
+			tUnits = tiAverageOver.toString() + "s";
+			if (tiAverageOver > bufLen) {
+				mSlow = true;
+				mMod = Math.round(((tiAverageOver.toFloat() / bufLen)+0.5).toNumber()) + 1;
+			}
 			mAverageOver = tiAverageOver * 1000;
 		}
-			if (mAverageOver > bufLen) {
-				mSlow = true;
-				mMod = Math.round(((mAverageOver.toFloat() / bufLen)+0.5).toNumber()) + 1;
-			} else {
-				mSlow = false;
-			}
 
 		if (mShowAsPace == null) {
 			mShowAsPace = cShowPace;
@@ -153,18 +145,19 @@ class RollingAverageView extends Ui.SimpleDataField {
 		mVal = mShowAsPace ? "0:00" : "0.00";
     }
 
-
     //! The timer was started, so set the state to running.
     function onTimerStart()
     {
-        mTimerState = RUNNING;
+        mTimerState = Activity.TIMER_STATE_ON;
+        mVal = mShowAsPace ? "0:00" : "0.00";
+        mDoCompute = 0;
     }
 
     //! The timer was stopped, so set the state to stopped.
     //! and zero counters so we can restart from the beginning
     function onTimerStop()
     {
-        mTimerState = STOPPED;
+        mTimerState = Activity.TIMER_STATE_STOPPED;
         mDists[0] = 0;
         mTimes[0] = 0;
         mOldest = 0;
@@ -174,26 +167,25 @@ class RollingAverageView extends Ui.SimpleDataField {
     //! The timer was paused, so set the state to paused.
     function onTimerPause()
     {
-        mTimerState = PAUSED;
+        mTimerState = Activity.TIMER_STATE_PAUSED;
     }
 
     //! The timer was restarted, so set the state to running again.
     function onTimerResume()
     {
-        mTimerState = RUNNING;
+        mTimerState = Activity.TIMER_STATE_ON;
     }
 
     //! The timer was reset, so reset all our tracking variables
     function onTimerReset()
     {
-        mTimerState = STOPPED;
+        mTimerState = Activity.TIMER_STATE_OFF;
         mVal = mShowAsPace ? "0:00" : "0.00";
         mDists[0] = 0;
         mTimes[0] = 0;
         mOldest = 0;
         mCurrent = 0;
     }
-  
 
     // The given info object contains all the current workout
     // information. Calculate a value and return it in this method.
@@ -213,7 +205,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 		// NB	info.elapsedTime is time since activity started
 		//		info.timerTime is time timer has been running excluding pauses/stops
 		//		shame there's no "timedDistance" :(
-        if (mTimerState == RUNNING) {
+        if (mTimerState == Activity.TIMER_STATE_ON) {
         	if (info.timerTime == null || info.elapsedDistance == null) {
         		return mVal;
         	}

@@ -2,7 +2,7 @@
 	<properties>
 
 		<property id="distTime" type="number"><!-- Value 0 means average over distance, anything else means average over time-->0</property>
-		<property id="averageOver" type="float"><!--Value is the metres/yards or km/miles to be averaged over in distance/metres mode or seconds in time mode-->200</property>
+		<property id="averageOver" type="float"><!--Value is the metres/yards or km/miles to be averaged over in distance/metres mode or seconds in time mode-->100</property>
 		<property id="showPace" type="number"><!--Value 1 means display as pace, otherwise show as speed-->1</property>
 	</properties>
 	<settings>
