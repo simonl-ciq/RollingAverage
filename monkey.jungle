@@ -64,3 +64,15 @@ vivoactive3d.resourcePath = $(vivoactive3d.resourcePath);$(icon40x33)
 vivoactive3m.resourcePath = $(vivoactive3m.resourcePath);$(icon40x33)
 vivoactive3mlte.resourcePath = $(vivoactive3mlte.resourcePath);$(icon40x33)
 vivoactive_hr.resourcePath = $(vivoactive_hr.resourcePath);$(icon40x33)
+#
+base.excludeAnnotations = mem_16k
+#
+d2bravo.excludeAnnotations = mem_other
+d2bravo_titanium.excludeAnnotations = mem_other
+fenix3.excludeAnnotations = mem_other
+fenix3_hr.excludeAnnotations = mem_other
+fr230.excludeAnnotations = mem_other
+fr235.excludeAnnotations = mem_other
+fr630.excludeAnnotations = mem_other
+fr920xt.excludeAnnotations = mem_other
+vivoactive.excludeAnnotations = mem_other

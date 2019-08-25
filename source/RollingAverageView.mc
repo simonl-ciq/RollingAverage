@@ -11,6 +11,10 @@ const distAccuracy = 2; // within how many metres ? or should it be a % ?
 const cTimeAverageOver = 60; // Time (s) over which to average Rate
 const timeAccuracy = 1000; // within how many milli seconds ? or should it be a % ?
 
+(:mem_16k)
+const bufLen = 450; // max number of points
+
+(:mem_other)
 const bufLen = 600; // max number of points
 
 const cShowPace = true;
