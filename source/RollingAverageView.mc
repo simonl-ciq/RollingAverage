@@ -11,10 +11,12 @@ const distAccuracy = 2; // within how many metres ? or should it be a % ?
 const cTimeAverageOver = 60; // Time (s) over which to average Rate
 const timeAccuracy = 1000; // within how many milli seconds ? or should it be a % ?
 
+/*
 (:mem_16k)
-const bufLen = 450; // max number of points
+const bufLen = 600; // max number of points
 
 (:mem_other)
+*/
 const bufLen = 600; // max number of points
 
 const cShowPace = true;
@@ -51,12 +53,13 @@ class RollingAverageView extends Ui.SimpleDataField {
 
     // Set the label of the data field here.
     function initialize() {
-        var tAverageOver;
-        var tfAverageOver;
+		var tAverageOver;
+		var tiAverageOver;
+		var tfAverageOver;
 		var tDistTime;
 		var tUnits;
-		var tiAverageOver;
-		
+		var tShowAsPace;
+
         SimpleDataField.initialize();
         
         mTimes[0] = 0;
@@ -68,12 +71,12 @@ class RollingAverageView extends Ui.SimpleDataField {
 		if ( App has :Properties ) {
 	        tDistTime = Props.getValue("distTime");
         	tAverageOver = Props.getValue("averageOver");
-	        mShowAsPace = Props.getValue("showPace") == 1;
+	        tShowAsPace = Props.getValue("showPace");
 	    } else {
 			var thisApp = App.getApp();
 	        tDistTime = thisApp.getProperty("distTime");
 	    	tAverageOver = thisApp.getProperty("averageOver");
-	        mShowAsPace = thisApp.getProperty("showPace") == 1;
+	        tShowAsPace = thisApp.getProperty("showPace");
 	    }
 
        	mUseDist = (tDistTime == null) ? cUseDist : (tDistTime == 0);
@@ -136,10 +139,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 			mAverageOver = tiAverageOver * 1000;
 		}
 
-		if (mShowAsPace == null) {
-			mShowAsPace = cShowPace;
-		}
-
+		mShowAsPace = (tShowAsPace == null) ? cShowPace : (tShowAsPace == 1);
 		label = tUnits + (mShowAsPace ? " Pace" : " Speed");
 
 		var info = Activity.getActivityInfo();
