@@ -1,18 +1,25 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Math;
 using Toybox.System as Sys;
+using Toybox.Activity as Activity;
 using Toybox.Application as App;
 using Toybox.Application.Properties as Props;
 //using Toybox.Test;
 
-const cDistAverageOver = 200.0; // Distance (m) over which to average Rate
-const distAccuracy = 2; // within how many metres ? or should it be a % ?
+enum {
+	TIMER_OFF,
+	TIMER_STOPPED,
+	TIMER_PAUSED,
+	TIMER_ON
+}
 
+const cDistAverageOver = 100.0; // Distance (m) over which to average Rate
 const cTimeAverageOver = 60; // Time (s) over which to average Rate
 const timeAccuracy = 1000; // within how many milli seconds ? or should it be a % ?
 
 const bufLen = 600; // max number of points
 
+const cUseOpposite = false;
 const cShowPace = true;
 const cUseDist = true;
 
@@ -30,7 +37,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 	hidden var mAverageOver = 100; // Distance (m) or Time (s) over which to average Rate
 	hidden var mShowAsPace = true;
 
-    hidden var mTimerState = Activity.TIMER_STATE_OFF;
+    hidden var mTimerState = TIMER_OFF;
 
 	hidden var mTimes = new [bufLen];
 	hidden var mDists = new [bufLen];
@@ -47,33 +54,44 @@ class RollingAverageView extends Ui.SimpleDataField {
 
     // Set the label of the data field here.
     function initialize() {
-        var tAverageOver;
-        var tfAverageOver;
+		var tAverageOver;
+		var tiAverageOver;
+		var tfAverageOver;
 		var tDistTime;
 		var tUnits;
-		var tiAverageOver;
-		
+		var tShowAsPace;
+		var tUseOpposite;
+		var mUseOpposite;
+
         SimpleDataField.initialize();
         
         mTimes[0] = 0;
         mDists[0] = 0;
 
-		mNotMetricPace = Sys.getDeviceSettings().paceUnits != Sys.UNIT_METRIC;
-		mNotMetricDist = Sys.getDeviceSettings().distanceUnits != Sys.UNIT_METRIC;
-
 		if ( App has :Properties ) {
 	        tDistTime = Props.getValue("distTime");
         	tAverageOver = Props.getValue("averageOver");
-	        mShowAsPace = Props.getValue("showPace") == 1;
+	        tShowAsPace = Props.getValue("showPace");
+	        tUseOpposite = Props.getValue("useOpposite");
 	    } else {
 			var thisApp = App.getApp();
 	        tDistTime = thisApp.getProperty("distTime");
 	    	tAverageOver = thisApp.getProperty("averageOver");
-	        mShowAsPace = thisApp.getProperty("showPace") == 1;
+	        tShowAsPace = thisApp.getProperty("showPace");
+	        tUseOpposite = thisApp.getProperty("useOpposite");
 	    }
 
        	mUseDist = (tDistTime == null) ? cUseDist : (tDistTime == 0);
 
+		var deviceSettings = Sys.getDeviceSettings();
+		mNotMetricPace = deviceSettings.paceUnits != Sys.UNIT_METRIC;
+		mNotMetricDist = deviceSettings.distanceUnits != Sys.UNIT_METRIC;
+       	mUseOpposite = (tUseOpposite == null) ? cUseOpposite : (tUseOpposite != 0);
+       	if (mUseOpposite) {
+	       	mNotMetricPace = !mNotMetricPace;
+	       	mNotMetricDist = !mNotMetricDist;
+		}
+		
 		mSlow = false;
 		if (mUseDist) {
 			if (tAverageOver == null) {
@@ -132,10 +150,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 			mAverageOver = tiAverageOver * 1000;
 		}
 
-		if (mShowAsPace == null) {
-			mShowAsPace = cShowPace;
-		}
-
+		mShowAsPace = (tShowAsPace == null) ? cShowPace : (tShowAsPace == 1);
 		label = tUnits + (mShowAsPace ? " Pace" : " Speed");
 
 		var info = Activity.getActivityInfo();
@@ -148,7 +163,7 @@ class RollingAverageView extends Ui.SimpleDataField {
     //! The timer was started, so set the state to running.
     function onTimerStart()
     {
-        mTimerState = Activity.TIMER_STATE_ON;
+        mTimerState = TIMER_ON;
         mVal = mShowAsPace ? "0:00" : "0.00";
         mDoCompute = 0;
     }
@@ -157,7 +172,7 @@ class RollingAverageView extends Ui.SimpleDataField {
     //! and zero counters so we can restart from the beginning
     function onTimerStop()
     {
-        mTimerState = Activity.TIMER_STATE_STOPPED;
+        mTimerState = TIMER_STOPPED;
         mDists[0] = 0;
         mTimes[0] = 0;
         mOldest = 0;
@@ -167,19 +182,19 @@ class RollingAverageView extends Ui.SimpleDataField {
     //! The timer was paused, so set the state to paused.
     function onTimerPause()
     {
-        mTimerState = Activity.TIMER_STATE_PAUSED;
+        mTimerState = TIMER_PAUSED;
     }
 
     //! The timer was restarted, so set the state to running again.
     function onTimerResume()
     {
-        mTimerState = Activity.TIMER_STATE_ON;
+        mTimerState = TIMER_ON;
     }
 
     //! The timer was reset, so reset all our tracking variables
     function onTimerReset()
     {
-        mTimerState = Activity.TIMER_STATE_OFF;
+        mTimerState = TIMER_OFF;
         mVal = mShowAsPace ? "0:00" : "0.00";
         mDists[0] = 0;
         mTimes[0] = 0;
@@ -205,7 +220,7 @@ class RollingAverageView extends Ui.SimpleDataField {
 		// NB	info.elapsedTime is time since activity started
 		//		info.timerTime is time timer has been running excluding pauses/stops
 		//		shame there's no "timedDistance" :(
-        if (mTimerState == Activity.TIMER_STATE_ON) {
+        if (mTimerState == TIMER_ON) {
         	if (info.timerTime == null || info.elapsedDistance == null) {
         		return mVal;
         	}
@@ -243,7 +258,6 @@ class RollingAverageView extends Ui.SimpleDataField {
 				}
 			}
        		Time = mTimes[mCurrent] - mTimes[mOldest];
-//Sys.println(mCurrent + ", " + mOldest + ", "  + rawDist + ", " + Time);
 
 //  Set up mVal ready for display
 // Remember distance is metres, time is milliseconds

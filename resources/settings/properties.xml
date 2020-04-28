@@ -4,6 +4,7 @@
 		<property id="distTime" type="number"><!-- Value 0 means average over distance, anything else means average over time-->0</property>
 		<property id="averageOver" type="float"><!--Value is the metres/yards or km/miles to be averaged over in distance/metres mode or seconds in time mode-->100</property>
 		<property id="showPace" type="number"><!--Value 1 means display as pace, otherwise show as speed-->1</property>
+		<property id="useOpposite" type="number"><!--Value 0 means display device units, otherwise opposite-->0</property>
 	</properties>
 	<settings>
 		<setting propertyKey="@Properties.distTime" title="@Strings.distTimeTitle">
@@ -13,12 +14,17 @@
 			</settingConfig>
 		</setting>
 		<setting propertyKey="@Properties.averageOver" title="@Strings.avgTitle">
-			<settingConfig type="numeric"></settingConfig>
+			<settingConfig type="numeric" errorMessage="@Strings.avgError"></settingConfig>
 		</setting>
 		<setting propertyKey="@Properties.showPace" title="@Strings.paceTitle">
 			<settingConfig type="list">
 				<listEntry value="1">@Strings.showPace</listEntry>
 				<listEntry value="0">@Strings.showSpeed</listEntry></settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.useOpposite" title="@Strings.oppositeTitle">
+			<settingConfig type="list">
+				<listEntry value="0">@Strings.useDevice</listEntry>
+				<listEntry value="1">@Strings.useOpposite</listEntry></settingConfig>
 		</setting>
 	</settings>
 	<strings>
@@ -29,5 +35,9 @@
 		<string id="paceTitle">Display as pace or speed?</string>
 		<string id="showPace">Pace</string>
 		<string id="showSpeed">Speed</string>
+		<string id="oppositeTitle">Display opposite units from device settings?</string>
+		<string id="useDevice">No</string>
+		<string id="useOpposite">Yes</string>
+		<string id="avgError">Enter a number - either integer or decimal.</string>
 	</strings>
 </resources>
