@@ -1,0 +1,17 @@
+<resources>
+    <strings>
+        <string id="ra_label">Rolling Average</string>
+        <string id="ra_graph_label">Rolling Average</string>
+        <string id="ra_units">Pace or Speed</string>
+    </strings>
+    <fitContributions>
+        <fitField id="0"
+        displayInChart="true"
+        sortOrder = "0"
+        precision="2"
+        chartTitle="@Strings.ra_graph_label"
+        dataLabel="@Strings.ra_label"
+        unitLabel="@Strings.ra_units"
+        fillColor="#FF0000" />
+    </fitContributions>
+</resources>    
