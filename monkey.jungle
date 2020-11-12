@@ -88,3 +88,15 @@ vivoactive3m.resourcePath = $(vivoactive3m.resourcePath);$(icon40x33)
 vivoactive3mlte.resourcePath = $(vivoactive3mlte.resourcePath);$(icon40x33)
 vivoactive4.resourcePath = $(vivoactive4.resourcePath);$(icon35x35)
 vivoactive_hr.resourcePath = $(vivoactive_hr.resourcePath);$(icon40x33)
+#
+base.excludeAnnotations = smallMem
+d2bravo.excludeAnnotations = largeMem
+d2bravo_titanium.excludeAnnotations = largeMem
+fenix3.excludeAnnotations = largeMem
+fenix3_hr.excludeAnnotations = largeMem
+fr230.excludeAnnotations = largeMem
+fr235.excludeAnnotations = largeMem
+fr630.excludeAnnotations = largeMem
+fr920xt.excludeAnnotations = largeMem
+vivoactive.excludeAnnotations = largeMem
+
