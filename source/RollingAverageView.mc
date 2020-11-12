@@ -19,7 +19,11 @@ enum {
 const cDistAverageOver = "50.0"; //"100.0"; // Distance (m) over which to average Rate
 const cTimeAverageOver = 60; // Time (s) over which to average Rate
 
-const bufLen = 600; // max number of points
+(:smallMem)
+const bufLen = 350; // max number of points
+
+(:largeMem)
+const bufLen = 1000; // max number of points
 
 const cShowPace = true;
 const cUseDist = true;
@@ -71,7 +75,7 @@ hidden var mVibe;
     hidden var mNotAvailable = false;
     hidden var mVal	  = "";
     hidden var mRate  = 0.0;
-    
+
     hidden var FitPaceField = null;
 
     // Set the label of the data field here.
@@ -273,7 +277,6 @@ hidden var mVibe;
 			}
 			mVibe = [ new Attention.VibeProfile(100, 750), new Attention.VibeProfile(0, 250)];
 	    }
-	    	
 	}
 	
     //! The timer was started, so set the state to running.
