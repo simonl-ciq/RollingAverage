@@ -72,7 +72,7 @@ hidden var mVibe;
 
     hidden var mRecordIt = 0;
 
-    hidden var mNotAvailable = false;
+    hidden var mNotSupported = false;
     hidden var mVal	  = "";
     hidden var mRate  = 0.0;
 
@@ -92,7 +92,15 @@ hidden var mVibe;
 		var tZoneCheck;
 
         SimpleDataField.initialize();
-        
+
+// Check whether this device can actually get the required info and if it's worth going any further
+		var info = Activity.getActivityInfo();
+       	if (!(info has :timerTime) || !(info has :elapsedDistance)) {
+       		label = "Rolling Average";
+       		mNotSupported = true;
+       		return;
+       	}
+
         mTimes[0] = 0;
         mDists[0] = 0;
 
@@ -195,10 +203,6 @@ hidden var mVibe;
 		mShowAsPace = (tShowAsPace == null) ? cShowPace : (tShowAsPace == 1);
 		label = tUnits + (mShowAsPace ? " Pace" : " Speed");
 
-		var info = Activity.getActivityInfo();
-       	if (!(info has :timerTime) || !(info has :elapsedDistance)) {
-       		mNotAvailable = true;
-       	}
 		mVal = mShowAsPace ? "0:00" : "0.00";
 		mRate = 0.0;
 
@@ -337,8 +341,8 @@ hidden var mVibe;
 		var Time;
 		var Rate = 0.0; // User can choose pace or speed
 
-       	if (mNotAvailable) {
-       		return "Not Available";
+       	if (mNotSupported) {
+       		return "Not Supported";
        	}
 
 
