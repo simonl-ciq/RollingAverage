@@ -1,6 +1,7 @@
 using Toybox.Application as App;
 
 class RollingAverageApp extends App.AppBase {
+	var myView;
 
     function initialize() {
         AppBase.initialize();
@@ -16,7 +17,8 @@ class RollingAverageApp extends App.AppBase {
 
     // Return the initial view of your application here
     function getInitialView() {
-        return [ new RollingAverageView() ];
+        myView = new RollingAverageView();
+        return [ myView];
     }
 
 }

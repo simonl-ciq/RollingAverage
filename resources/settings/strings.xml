@@ -1,0 +1,21 @@
+<resources>
+	<strings>
+		<string id="distTimeTitle">Average over distance or time?</string>
+		<string id="useDist">Distance</string>
+		<string id="useTime">Time</string>
+		<string id="avgTitle">Metres/km, yds/miles or secs to average over</string>
+		<string id="avgError">Enter a number - either integer or decimal.</string>
+		<string id="paceTitle">Display as pace or speed?</string>
+		<string id="showPace">Pace</string>
+		<string id="showSpeed">Speed</string>
+		<string id="No">No</string>
+		<string id="Yes">Yes</string>
+		<string id="oppositeTitle">Display opposite units from device settings?</string>
+		<string id="recordTitle">Record data to FIT file?</string>
+		<string id="invertTitle">Record data as negative?</string>
+		<string id="zoneTitle">Check if pace/speed is within limits?</string>
+		<string id="upperLimit">Max pace or speed (mins:secs / dist per hour)</string>
+		<string id="lowerLimit">Min pace or speed (mins:secs / dist per hour)</string>
+		<string id="zoneError">Enter a pace (mins:secs) or speed (dist per hour).</string>
+	</strings>
+</resources>

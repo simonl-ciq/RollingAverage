@@ -2,8 +2,14 @@
 	<properties>
 
 		<property id="distTime" type="number"><!-- Value 0 means average over distance, anything else means average over time-->0</property>
-		<property id="averageOver" type="float"><!--Value is the metres/yards or km/miles to be averaged over in distance/metres mode or seconds in time mode-->100</property>
+		<property id="averageOver" type="string"><!--Value is the metres/yards or km/miles to be averaged over in distance/metres mode or seconds in time mode-->100</property>
 		<property id="showPace" type="number"><!--Value 1 means display as pace, otherwise show as speed-->1</property>
+		<property id="useOpposite" type="number"><!--Value 0 means display device units, otherwise opposite-->0</property>
+		<property id="recordData" type="number"><!--Value 0 means don't record, otherwise record to FIT file-->0</property>
+		<property id="invertData" type="number"><!--Value 0 means don't invert, otherwise do-->0</property>
+		<property id="zoneCheck" type="number"><!--Value 0 means don't check if pace/speed is within limits, otherwise do-->0</property>
+		<property id="upperLimit" type="string"><!--Value -->0</property>
+		<property id="lowerLimit" type="string"><!--Value -->0</property>
 	</properties>
 	<settings>
 		<setting propertyKey="@Properties.distTime" title="@Strings.distTimeTitle">
@@ -13,21 +19,39 @@
 			</settingConfig>
 		</setting>
 		<setting propertyKey="@Properties.averageOver" title="@Strings.avgTitle">
-			<settingConfig type="numeric"></settingConfig>
+			<settingConfig type="alphaNumeric" errorMessage="@Strings.avgError"></settingConfig>
 		</setting>
 		<setting propertyKey="@Properties.showPace" title="@Strings.paceTitle">
 			<settingConfig type="list">
 				<listEntry value="1">@Strings.showPace</listEntry>
 				<listEntry value="0">@Strings.showSpeed</listEntry></settingConfig>
 		</setting>
+		<setting propertyKey="@Properties.useOpposite" title="@Strings.oppositeTitle">
+			<settingConfig type="list">
+				<listEntry value="0">@Strings.No</listEntry>
+				<listEntry value="1">@Strings.Yes</listEntry></settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.recordData" title="@Strings.recordTitle">
+			<settingConfig type="list">
+				<listEntry value="0">@Strings.No</listEntry>
+				<listEntry value="1">@Strings.Yes</listEntry></settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.invertData" title="@Strings.invertTitle">
+			<settingConfig type="list">
+				<listEntry value="0">@Strings.No</listEntry>
+				<listEntry value="1">@Strings.Yes</listEntry></settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.zoneCheck" title="@Strings.zoneTitle">
+			<settingConfig type="list">
+				<listEntry value="0">@Strings.No</listEntry>
+				<listEntry value="1">@Strings.Yes</listEntry>
+			</settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.lowerLimit" title="@Strings.lowerLimit">
+			<settingConfig type="alphaNumeric" errorMessage="@Strings.zoneError"></settingConfig>
+		</setting>
+		<setting propertyKey="@Properties.upperLimit" title="@Strings.upperLimit">
+			<settingConfig type="alphaNumeric" errorMessage="@Strings.zoneError"></settingConfig>
+		</setting>
 	</settings>
-	<strings>
-		<string id="distTimeTitle">Average over distance or time?</string>
-		<string id="useDist">Distance</string>
-		<string id="useTime">Time</string>
-		<string id="avgTitle">Metres/km, yds/miles or secs to average over</string>
-		<string id="paceTitle">Display as pace or speed?</string>
-		<string id="showPace">Pace</string>
-		<string id="showSpeed">Speed</string>
-	</strings>
 </resources>
